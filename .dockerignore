@@ -1,5 +1,12 @@
 .git
-__pycache__
+.gitignore
+__pycache__/
+*.pyc
+*.log
 *.db
-data/
-.venv
+*.sqlite
+*.sqlite3
+instance/
+.env
+.vscode/
+README.md

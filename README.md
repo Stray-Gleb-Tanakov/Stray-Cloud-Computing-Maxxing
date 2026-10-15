@@ -62,3 +62,7 @@ docker run -d -e POSTGRES_PASSWORD=geheim --name mijn-postgres postgres
 ```
 
 Docker verzint anders random namen als `boring_kare`, `happy_euler`, etc. Met `--name` kies je zelf. [docs.docker](https://docs.docker.com/engine/containers/run.md)
+
+
+Waarom COPY requirements.txt apart?
+Omdat requirements.txt zelden verandert. Door het eerst te kopiëren en daarna pip install uit te voeren, blijft die dure installatiestap in Docker’s cache als je alleen app.py aanpast. Pas als requirements.txt verandert, moet pip opnieuw draaien

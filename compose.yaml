@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    image: ghcr.io/stray-gleb-tanakov/storingsmelder:1.0
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://storingsmelder:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/storingsmelder"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: storingsmelder
+      POSTGRES_DB: storingsmelder
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "storingsmelder", "-d", "storingsmelder"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  postgres-data:
