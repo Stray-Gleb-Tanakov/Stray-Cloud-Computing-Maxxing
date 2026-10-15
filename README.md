@@ -1,68 +1,85 @@
-This is a message for Ian!
-** 1. 
-`hello-world` runt één commando (printen) en exit direct - container stopt.  
-`nginx` start een server die blijft luisteren -- hoofdproces loopt door → container blijft “Running”.
+# Storingsmelder
 
-**2. 
-Geen download meer: image zat al lokaal in cache. Dus sneller, geen “Pulling from library/hello-world”.
+Storingsmelder draait met Docker Compose als twee services:
+- `web`: de Flask-applicatie, gebouwd uit de Dockerfile.
+- `db`: PostgreSQL 18.
 
-**3. Waarom maar een paar processen bij `ps aux` in de container?**  
-Container draait alleen wat nodig is voor die app: geen systemd, cron, etc. Alleen nginx master/worker (+ je shell als je erin zit). ps doesnt work tho
+De applicatie bereikt PostgreSQL via de servicenaam `db`.
+Een healthcheck zorgt ervoor dat de applicatie pas start wanneer
+PostgreSQL verbindingen aanneemt.
 
-**4. `/etc/os-release` anders dan op je laptop, maar draait wel op jouw machine. Hoe?**  
-Containers delen de kernel van de host, maar hebben hun eigen userspace/filesystem. Dus andere distro in de container,zelfde kernel. basically DID, second personality one brain
+## Vereisten
 
-**5. Twee nginx-containers op verschillende poorten: commando + waarom niet dezelfde poort?**  
-```bash
-docker run -d -p 8080:80 --name nginx1 nginx
-docker run -d -p 8081:80 --name nginx2 nginx
-```
-Host-poorten zijn uniek: maar één proces kan op `0.0.0.0:8080` luisteren. Tweede container geeft “address already in use”. learnt this at cybersec
+- Docker Desktop met Docker Compose
+- Git
 
-**6. Verschil `docker stop` vs `docker kill`**  
-- `stop`: stuurt SIGTERM → wacht (std 10s) → dan SIGKILL. Graceful shutdown.  
-- `kill`: stuurt direct SIGKILL. Harde, onmiddellijke moord.
+## Starten vanaf nul
 
-**7. Hoeveel plaats images samen? Commando?**  
-```bash
-docker images
-```
-Kijk naar kolom SIZE. Optellen voor totaal.
+Clone deze repository en open PowerShell in de repositorymap.
+git clone https://github.com/Stray-Gleb-Tanakov/Stray-Cloud-Computing-Maxxing.git
+cd Stray-Cloud-Computing-Maxxing
+Copy-Item .env.example .env
 
 
-**1. `traefik/whoami` starten + wat toont hij?**
+Maak het lokale configuratiebestand:
 
-```bash
-docker run -d -p 8080:80 --name whoami traefik/whoami
+```powershell
+Copy-Item .env.example .env
 ```
 
-Browser: `http://localhost:8080`  
-Toont: simpele pagina met hostname, IP, en HTTP-headers (wie je request was). Handig om te zien dat je container bereikbaar is. [hub.docker](https://hub.docker.com/r/traefik/whoami)
+Open `.env` en vul een eigen wachtwoord in bij `POSTGRES_PASSWORD`.
+Gebruik voor deze configuratie een lang, willekeurig wachtwoord
+met letters en cijfers.
 
-***
+Bouw en start de applicatie en database:
 
-**2. Waarom kan je `postgres` niet zomaar starten zoals nginx?**
-
-Omdat de postgres image **verplichte environment variables** nodig heeft, vooral:
-
-- `POSTGRES_PASSWORD` (required) – superuser password, mag niet leeg zijn. [docs.docker](https://docs.docker.com/guides/postgresql/)
-
-Zonder die vars start de container niet correct of is hij onbruikbaar (geen login mogelijk). Nginx werkt “out of the box” zonder extra config. [docs.docker](https://docs.docker.com/guides/postgresql/)
-
-***
-
-**3. Container zelf een naam geven: welke optie?**
-
-Optie: `--name` [docs.docker](https://docs.docker.com/engine/containers/run.md)
-
-Voorbeeld:
-
-```bash
-docker run -d -e POSTGRES_PASSWORD=geheim --name mijn-postgres postgres
+```powershell
+docker compose up -d --build
 ```
 
-Docker verzint anders random namen als `boring_kare`, `happy_euler`, etc. Met `--name` kies je zelf. [docs.docker](https://docs.docker.com/engine/containers/run.md)
+Open http://localhost:8000.
 
+Controleer de services en de databaseverbinding:
 
-Waarom COPY requirements.txt apart?
-Omdat requirements.txt zelden verandert. Door het eerst te kopiëren en daarna pip install uit te voeren, blijft die dure installatiestap in Docker’s cache als je alleen app.py aanpast. Pas als requirements.txt verandert, moet pip opnieuw draaien
+```powershell
+docker compose ps
+curl.exe http://localhost:8000/health
+```
+
+De health-endpoint hoort `"status": "ok"` en `"opslag": "PostgreSQL"`
+terug te geven.
+
+## Stoppen en opnieuw starten
+
+```powershell
+docker compose down
+docker compose up -d
+```
+
+De databasegegevens blijven behouden in het named volume `postgres-data`.
+
+## Alle gegevens verwijderen
+
+Let op: dit verwijdert ook de opgeslagen meldingen.
+
+```powershell
+docker compose down -v
+```
+
+## Logs bekijken
+
+```powershell
+docker compose logs web
+docker compose logs db
+```
+
+## Publiek image
+
+Het applicatie-image is beschikbaar als:
+
+`ghcr.io/stray-gleb-tanakov/storingsmelder:1.0`
+
+## Configuratie en geheimen
+
+Het lokale `.env`-bestand bevat het databasewachtwoord en wordt niet
+gecommit. `.env.example` bevat alleen de variabelenaam met een lege waarde.
