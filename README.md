@@ -1,3 +1,5 @@
+KUBERNETES IS BELOW. KUBERNETES IS A PSYOP. KUBERNETES ISN'T REAL. IT'S CREEPING CLOSER. ENTROPY IS NEAR.
+
 # Storingsmelder
 
 Storingsmelder draait met Docker Compose als twee services:
@@ -83,3 +85,37 @@ Het applicatie-image is beschikbaar als:
 
 Het lokale `.env`-bestand bevat het databasewachtwoord en wordt niet
 gecommit. `.env.example` bevat alleen de variabelenaam met een lege waarde.
+
+
+
+
+
+KUBERNETES ISN'T REAL, IT'S A PSYOP MADE BY THE GOVERNMENT TO MAKE YOU THINK SERVICES ARE RUNNING
+
+# Storingsmelder
+
+Storingsmelder draait op Kubernetes met een PostgreSQL-database.
+
+## Vereisten
+- Docker Desktop met een kind-cluster (`kind create cluster`)
+- kubectl
+- Het image staat publiek op ghcr.io/stray-gleb-tanakov/storingsmelder:1.1
+
+## Opzetten
+kubectl create namespace proef
+kubectl apply -f k8s/ -n proef
+kubectl get pods -n proef
+
+Wacht tot de pods van de applicatie en de database Running zijn.
+De applicatie herstart soms een of twee keer terwijl de database opstart.
+
+## Bekijken
+kubectl port-forward service/storingsmelder 8000:80 -n proef
+Open daarna http://localhost:8000
+Controle: http://localhost:8000/health toont PostgreSQL.
+
+## Opruimen
+kubectl delete namespace proef
+
+## Opmerking
+Het databasewachtwoord staat nog in de manifests. Dit wordt opgelost in opdracht 3.

@@ -17,3 +17,7 @@ spec:
           image: ghcr.io/stray-gleb-tanakov/storingsmelder:1.1
           ports:
             - containerPort: 8000
+          env:
+            # TODO: wachtwoord naar een Secret verplaatsen (opdracht 3)
+            - name: DATABASE_URL
+              value: postgresql://storing:storing123@db:5432/storingsmelder
